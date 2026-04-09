@@ -120,23 +120,10 @@ if (content.includes(PATCH1_MARKER)) {
 }
 
 // ── Patch 2: Multi-account failover fetch interceptor ─────────────────────────
-  let v2Start = content.indexOf('/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V2 */');
-  if (v2Start !== -1) {
-    let v2End = content.indexOf('})();\\n', v2Start);
-    if (v2End !== -1) content = content.substring(0, v2Start) + content.substring(v2End + 6);
-  }
+  content = content.replace(/\\/\\* ANTIGRAVITY_MULTIACCOUNT_PATCH_V2 \\*\\/[\\s\\S]*?\\}\\)\\(\\\);/g, '');
+  content = content.replace(/\\/\\* ANTIGRAVITY_MULTIACCOUNT_PATCH_V3 \\*\\/[\\s\\S]*?\\}\\)\\(\\\);/g, '');
+  content = content.replace(/\\/\\* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 \\*\\/[\\s\\S]*?\\/\\* END_ANTIGRAVITY_PATCH_V4 \\*\\//g, '');
 
-  let v3Start = content.indexOf('/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V3 */');
-  if (v3Start !== -1) {
-    let v3End = content.indexOf('})();\\n', v3Start);
-    if (v3End !== -1) content = content.substring(0, v3Start) + content.substring(v3End + 6);
-  }
-
-  let v4Start = content.indexOf('/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */');
-  if (v4Start !== -1) {
-    let v4End = content.indexOf('/* END_ANTIGRAVITY_PATCH_V4 */', v4Start);
-    if (v4End !== -1) content = content.substring(0, v4Start) + content.substring(v4End + 30);
-  }
 
   const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */';
   if (!content.includes(MARKER)) {
