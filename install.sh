@@ -122,7 +122,7 @@ if (content.includes(PATCH1_MARKER)) {
 // ── Patch 2: Multi-account failover fetch interceptor ─────────────────────────
 // No need for patch cleanup anymore since we reinstall cleanly.
 
-  const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */';
+  const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V5 */';
   if (!content.includes(MARKER)) {
     const INJECTION = `
   ${MARKER}
@@ -249,9 +249,9 @@ if (content.includes(PATCH1_MARKER)) {
       }
       return lastRes;
     };
-    console.error('[antigravity-failover] V4 active, pool size: ' + _loadPool().length);
+    console.error('[antigravity-failover] V5 active, pool size: ' + _loadPool().length);
   })();
-  /* END_ANTIGRAVITY_PATCH_V4 */
+  /* END_ANTIGRAVITY_PATCH_V5 */
   `;
   content = INJECTION + '\n' + content;
   console.log('  ✅  Patch 2 applied: multi-account failover interceptor.');
