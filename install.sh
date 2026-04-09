@@ -126,16 +126,29 @@ if (content.includes(PATCH1_MARKER)) {
     if (v2End !== -1) content = content.substring(0, v2Start) + content.substring(v2End + 6);
   }
 
-  const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V3 */';
+  let v3Start = content.indexOf('/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V3 */');
+  if (v3Start !== -1) {
+    let v3End = content.indexOf('})();\\n', v3Start);
+    if (v3End !== -1) content = content.substring(0, v3Start) + content.substring(v3End + 6);
+  }
+
+  let v4Start = content.indexOf('/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */');
+  if (v4Start !== -1) {
+    let v4End = content.indexOf('/* END_ANTIGRAVITY_PATCH_V4 */', v4Start);
+    if (v4End !== -1) content = content.substring(0, v4Start) + content.substring(v4End + 30);
+  }
+
+  const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */';
   if (!content.includes(MARKER)) {
-    const INJECTION = `
-  ${MARKER}
+    const INJECTION = \`
+  \${MARKER}
+  import _fs from 'node:fs';
+  import { Buffer as _Buffer } from 'node:buffer';
   (function injectAntigravityFailover() {
-    const _fs = require('fs');
-    const _AUTH = ${JSON.stringify(AUTH_PROFILES)};
+    const _AUTH = \${JSON.stringify(AUTH_PROFILES)};
     const _TOKEN_URL = 'https://oauth2.googleapis.com/token';
-    const _CID = Buffer.from('MTA3MTAwNjA2MDU5MS10bWhzc2luMmgyMWxjcmUyMzV2dG9sb2poNGc0MDNlcC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbQ==','base64').toString();
-    const _CS = Buffer.from('R09DU1BYLUs1OEZXUjQ4NkxkTEoxbUxCOHNYQzR6NnFEQWY=','base64').toString();
+    const _CID = _Buffer.from('MTA3MTAwNjA2MDU5MS10bWhzc2luMmgyMWxjcmUyMzV2dG9sb2poNGc0MDNlcC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbQ==','base64').toString();
+    const _CS = _Buffer.from('R09DU1BYLUs1OEZXUjQ4NkxkTEoxbUxCOHNYQzR6NnFEQWY=','base64').toString();
   
     function _loadPool() {
       try {
@@ -252,8 +265,9 @@ if (content.includes(PATCH1_MARKER)) {
       }
       return lastRes;
     };
-    console.error('[antigravity-failover] V3 active, pool size: ' + _loadPool().length);
+    console.error('[antigravity-failover] V4 active, pool size: ' + _loadPool().length);
   })();
+  /* END_ANTIGRAVITY_PATCH_V4 */
   `;
   content = INJECTION + '\n' + content;
   console.log('  ✅  Patch 2 applied: multi-account failover interceptor.');
