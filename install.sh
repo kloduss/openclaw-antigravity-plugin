@@ -255,7 +255,6 @@ if (content.includes(PATCH1_MARKER)) {
     console.error('[antigravity-failover] V3 active, pool size: ' + _loadPool().length);
   })();
   `;
-`;
   content = INJECTION + '\n' + content;
   console.log('  ✅  Patch 2 applied: multi-account failover interceptor.');
 } else {
