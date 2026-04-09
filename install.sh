@@ -140,12 +140,12 @@ if (content.includes(PATCH1_MARKER)) {
 
   const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */';
   if (!content.includes(MARKER)) {
-    const INJECTION = \`
-  \${MARKER}
+    const INJECTION = `
+  ${MARKER}
   import _fs from 'node:fs';
   import { Buffer as _Buffer } from 'node:buffer';
   (function injectAntigravityFailover() {
-    const _AUTH = \${JSON.stringify(AUTH_PROFILES)};
+    const _AUTH = ${JSON.stringify(AUTH_PROFILES)};
     const _TOKEN_URL = 'https://oauth2.googleapis.com/token';
     const _CID = _Buffer.from('MTA3MTAwNjA2MDU5MS10bWhzc2luMmgyMWxjcmUyMzV2dG9sb2poNGc0MDNlcC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbQ==','base64').toString();
     const _CS = _Buffer.from('R09DU1BYLUs1OEZXUjQ4NkxkTEoxbUxCOHNYQzR6NnFEQWY=','base64').toString();
