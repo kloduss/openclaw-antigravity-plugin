@@ -211,6 +211,17 @@ PATCH_JS_EOF
   echo "✅  Core proxy patch complete."
 fi
 
+# ── 5.5 Patch pi-ai Models ──────────────────────────────────────────────────
+echo "🔧  Applying 1M context limits patch to openclaw models..."
+MODELS_FILE="$INSTALL_PATH/node_modules/@mariozechner/pi-ai/dist/models.generated.js"
+if [ -f "$MODELS_FILE" ]; then
+  # Inject contextWindow before cost block for gemini models
+  sed -i 's/cost: {/contextWindow: 1000000, cost: {/g' "$MODELS_FILE"
+  echo "  ✅  Models file patched."
+else
+  echo "  ⚠️   Models file not found at $MODELS_FILE"
+fi
+
 # ── 6. Restart Gateway ────────────────────────────────────────────────────────
 echo "🔄  Restarting OpenClaw gateway..."
 "$OPENCLAW_BIN" gateway restart && echo "✅  Gateway restarted." || echo "⚠️   Gateway restart failed — please restart manually."
