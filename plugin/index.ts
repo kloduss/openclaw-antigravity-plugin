@@ -503,6 +503,17 @@ const antigravityPlugin = {
       label: "Google Antigravity",
       docsPath: "/providers/models",
       aliases: ["antigravity"],
+      // ── Models definitions with correct context limits ────────────────────────
+      models: async () => [
+        { id: "gemini-3-flash", label: "Gemini 3 Flash", contextWindow: 2000000, features: ["system_prompt", "tools"] },
+        { id: "gemini-3-pro", label: "Gemini 3 Pro", contextWindow: 2000000, features: ["system_prompt", "tools"] },
+        { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", contextWindow: 2000000, features: ["system_prompt", "tools"] },
+        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", contextWindow: 2000000, features: ["system_prompt", "tools"] },
+        { id: "gemini-1.5-pro", label: "Gemini 1.5 Pro", contextWindow: 2000000, features: ["system_prompt", "tools"] },
+        { id: "gemini-1.5-flash", label: "Gemini 1.5 Flash", contextWindow: 2000000, features: ["system_prompt", "tools", "vision"] },
+        { id: "claude-opus-4-5-thinking", label: "Claude Opus 4.5 Thinking", contextWindow: 200000, features: ["system_prompt"] },
+        { id: "claude-3.5-sonnet", label: "Claude 3.5 Sonnet", contextWindow: 200000, features: ["system_prompt", "tools"] },
+      ],
       // ── Critical: package { token, projectId } so the provider can parse it ─
       formatApiKey: (cred) => {
         const c = cred as any;
@@ -575,10 +586,14 @@ const antigravityPlugin = {
                   },
                 },
                 defaultModel: DEFAULT_MODEL,
+                nextCommand: "configure", // Automatically trigger configuration (for some SDK versions)
+                configure: "models", // Try alternate key as well
                 notes: [
                   "Antigravity uses Google Cloud project quotas.",
                   "You can add multiple Google accounts by running 'openclaw models auth login --provider google-antigravity' again.",
                   "The plugin will automatically switch accounts when quota limits are hit.",
+                  "",
+                  "Select your default model by running 'openclaw configure' or pressing Space in the model selection menu.",
                 ],
               };
             } catch (err) {
