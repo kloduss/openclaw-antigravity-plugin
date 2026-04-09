@@ -54,6 +54,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_SOURCE_DIR="$SCRIPT_DIR/plugin"
 PLUGIN_DEST_DIR="$HOME/.openclaw/workspace/google-antigravity-auth-backup"
+INSTALL_PATH="$HOME/.openclaw/extensions/google-antigravity-auth"
 
 echo "📦  Installing plugin to $INSTALL_PATH ..."
 mkdir -p "$INSTALL_PATH"
@@ -65,7 +66,6 @@ cp -r "$PLUGIN_SOURCE_DIR/"* "$PLUGIN_DEST_DIR/"
 
 # ── 4. Register Plugin in openclaw.json ───────────────────────────────────────
 OPENCLAW_JSON="$HOME/.openclaw/openclaw.json"
-INSTALL_PATH="$HOME/.openclaw/extensions/google-antigravity-auth"
 
 echo "⚙️   Configuring openclaw.json ..."
 node - << NODEJS_EOF
