@@ -100,8 +100,8 @@ if [ -n "${CLI_JS_PATH:-}" ]; then
 
   cat > "$PATCH_SCRIPT" << 'PATCH_JS_EOF'
 const fs = require('fs');
-const CLI_JS = process.argv[1];
-const AUTH_PROFILES = process.argv[2];
+const CLI_JS = process.argv[2];
+const AUTH_PROFILES = process.argv[3];
 
 let content = fs.readFileSync(CLI_JS, 'utf8');
 
