@@ -213,7 +213,7 @@ fi
 
 # ── 5.5 Patch pi-ai Models ──────────────────────────────────────────────────
 echo "🔧  Applying 1M context limits patch to openclaw models..."
-MODELS_FILE="$INSTALL_PATH/node_modules/@mariozechner/pi-ai/dist/models.generated.js"
+MODELS_FILE="$(npm root -g)/openclaw/node_modules/@mariozechner/pi-ai/dist/models.generated.js"
 if [ -f "$MODELS_FILE" ]; then
   # Inject contextWindow before cost block for gemini models
   sed -i 's/cost: {/contextWindow: 1000000, cost: {/g' "$MODELS_FILE"
