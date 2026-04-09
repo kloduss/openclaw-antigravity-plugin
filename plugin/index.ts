@@ -586,8 +586,8 @@ const antigravityPlugin = {
                   },
                 },
                 defaultModel: DEFAULT_MODEL,
-                nextCommand: "configure", // Automatically trigger configuration (for some SDK versions)
-                configure: "models", // Try alternate key as well
+                nextStep: "configure", // Automatically trigger configuration
+                instruction: "configure",
                 notes: [
                   "Antigravity uses Google Cloud project quotas.",
                   "You can add multiple Google accounts by running 'openclaw models auth login --provider google-antigravity' again.",
