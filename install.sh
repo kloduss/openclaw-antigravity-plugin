@@ -120,10 +120,7 @@ if (content.includes(PATCH1_MARKER)) {
 }
 
 // ── Patch 2: Multi-account failover fetch interceptor ─────────────────────────
-  content = content.replace(/\\/\\* ANTIGRAVITY_MULTIACCOUNT_PATCH_V2 \\*\\/[\\s\\S]*?\\}\\)\\(\\);/g, '');
-  content = content.replace(/\\/\\* ANTIGRAVITY_MULTIACCOUNT_PATCH_V3 \\*\\/[\\s\\S]*?\\}\\)\\(\\);/g, '');
-  content = content.replace(/\\/\\* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 \\*\\/[\\s\\S]*?\\/\\* END_ANTIGRAVITY_PATCH_V4 \\*\\//g, '');
-
+// No need for patch cleanup anymore since we reinstall cleanly.
 
   const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V4 */';
   if (!content.includes(MARKER)) {
