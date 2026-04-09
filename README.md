@@ -132,4 +132,8 @@ When you run `npm update -g openclaw`, the proxy patch may be overwritten. Re-ap
 
 - **`formatApiKey`**: Called by OpenClaw before each request to convert the stored OAuth credential `{access, refresh, expires, projectId}` into the `{token, projectId}` JSON string the provider expects.
 - **`refreshOAuth`**: Called by OpenClaw when a token is near expiry. Uses the stored `refresh` token to get a new `access` token from Google without any user interaction.
-- **Proxy Patch V3**: Fixes `google-gemini-cli.js` catch block to gracefully handle both JSON and raw token formats as a safety net.
+- **Proxy Patch V5**: Completely intercepts Google Cloud Code Assist network requests to add failover logic:
+  - Automatically switches accounts on `429 Too Many Requests`, `403 Forbidden`, `500 Internal Error`, `502 Bad Gateway`, and `503 Service Unavailable (No Capacity)`.
+  - **Sticky Sessions:** Reuses the successful active account for 60 minutes to prevent redundant rotation and mitigate ban risks.
+  - **SSE Streaming Notifications:** Injects real-time warnings (`⚠️ Antigravity Auto-Failover Triggered`) directly into the Telegram response stream whenever an account switch occurs.
+  - Fixes `google-gemini-cli.js` token fallback to handle ES Modules natively.
