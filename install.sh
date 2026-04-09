@@ -158,7 +158,7 @@ if (content.includes(PATCH1_MARKER)) {
          if (!raw.usageStats) raw.usageStats = {};
          fn(raw.usageStats);
          _fs.writeFileSync(_AUTH, JSON.stringify(raw,null,2));
-       } catch(e) {}
+       } catch(e) { console.error('[antigravity-failover] usage sync error: ', e.message); }
     }
     function _markFailed(id) {
        _updateUsageStats(function(s) { const st=s[id]||{}; st.errorCount=(st.errorCount||0)+1; st.lastFailureAt=Date.now(); s[id]=st; });
@@ -204,10 +204,10 @@ if (content.includes(PATCH1_MARKER)) {
         const newInit = Object.assign({}, init, {headers: h});
         const res = await _origFetch(url, newInit);
         
-        if (res.status===429 || res.status===403) { 
+        if ([429, 403, 500, 502, 503].includes(res.status)) { 
            console.error('[antigravity-failover] ' + acc.email + ' returned ' + res.status + ', trying next...'); 
            _markFailed(acc.id); 
-           failoverMessages.push(acc.email + ' -> ' + res.status);
+           failoverMessages.push(acc.email + ' (' + res.status + ')');
            lastRes=res; 
            continue; 
         }
