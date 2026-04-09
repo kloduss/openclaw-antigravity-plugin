@@ -120,67 +120,141 @@ if (content.includes(PATCH1_MARKER)) {
 }
 
 // ── Patch 2: Multi-account failover fetch interceptor ─────────────────────────
-const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V2 */';
-if (!content.includes(MARKER)) {
-  const INJECTION = `
-${MARKER}
-(function injectAntigravityFailover() {
-  const _fs = require('fs');
-  const _AUTH = ${JSON.stringify(AUTH_PROFILES)};
-  const _TOKEN_URL = 'https://oauth2.googleapis.com/token';
-  const _CID = Buffer.from('MTA3MTAwNjA2MDU5MS10bWhzc2luMmgyMWxjcmUyMzV2dG9sb2poNGc0MDNlcC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbQ==','base64').toString();
-  const _CS = Buffer.from('R09DU1BYLUs1OEZXUjQ4NkxkTEoxbUxCOHNYQzR6NnFEQWY=','base64').toString();
-
-  function _loadPool() {
-    try {
-      if (!_fs.existsSync(_AUTH)) return [];
-      const raw = JSON.parse(_fs.readFileSync(_AUTH,'utf8'));
-      const p = raw.profiles || {}, s = raw.usageStats || {};
-      return Object.entries(p)
-        .filter(([,v]) => v.provider==='google-antigravity' && v.type==='oauth')
-        .map(([id,v]) => { const st=s[id]||{}; return {id,email:v.email||id,access:v.access||'',refresh:v.refresh||'',expires:v.expires||0,projectId:v.projectId||'rising-fact-p41fc',errors:st.errorCount||0,failedAt:st.lastFailureAt||0}; })
-        .sort((a,b) => a.errors!==b.errors ? a.errors-b.errors : a.failedAt-b.failedAt);
-    } catch { return []; }
-  }
-  function _markFailed(id) {
-    try {
-      const raw = JSON.parse(_fs.readFileSync(_AUTH,'utf8'));
-      if (!raw.usageStats) raw.usageStats = {};
-      const st = raw.usageStats[id] || {};
-      st.errorCount = (st.errorCount||0)+1; st.lastFailureAt = Date.now();
-      raw.usageStats[id] = st;
-      _fs.writeFileSync(_AUTH, JSON.stringify(raw,null,2));
-    } catch {}
-  }
-  async function _refresh(id, rt) {
-    try {
-      const res = await _origFetch(_TOKEN_URL, {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:_CID,client_secret:_CS,grant_type:'refresh_token',refresh_token:rt})});
-      if (!res.ok) return null;
-      const d = await res.json(); const ac = d.access_token?.trim(); if (!ac) return null;
-      if (_fs.existsSync(_AUTH)) { const raw=JSON.parse(_fs.readFileSync(_AUTH,'utf8')); if(raw.profiles?.[id]){raw.profiles[id].access=ac;raw.profiles[id].expires=Date.now()+(d.expires_in||3600)*1000-300000;_fs.writeFileSync(_AUTH,JSON.stringify(raw,null,2));} }
-      return ac;
-    } catch { return null; }
+  let v2Start = content.indexOf('/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V2 */');
+  if (v2Start !== -1) {
+    let v2End = content.indexOf('})();\\n', v2Start);
+    if (v2End !== -1) content = content.substring(0, v2Start) + content.substring(v2End + 6);
   }
 
-  const _origFetch = globalThis.fetch;
-  globalThis.fetch = async function antigravityFetch(url, init) {
-    const urlStr = typeof url==='string' ? url : (url?.toString?.() || '');
-    if (!urlStr.includes('cloudcode-pa.googleapis.com')) return _origFetch(url,init);
-    const pool = _loadPool();
-    if (pool.length <= 1) return _origFetch(url,init);
-    let lastRes;
-    for (const acc of pool) {
-      let token = acc.access;
-      if (acc.expires < Date.now() && acc.refresh) { const r = await _refresh(acc.id, acc.refresh); if (r) token = r; }
-      const h = new Headers(init?.headers); h.set('Authorization','Bearer '+token);
-      const res = await _origFetch(url, {...init, headers:h});
-      if (res.status===429 || res.status===403) { console.error('[antigravity-failover] '+acc.email+' returned '+res.status+', trying next...'); _markFailed(acc.id); lastRes=res; continue; }
-      return res;
+  const MARKER = '/* ANTIGRAVITY_MULTIACCOUNT_PATCH_V3 */';
+  if (!content.includes(MARKER)) {
+    const INJECTION = \`
+  \${MARKER}
+  (function injectAntigravityFailover() {
+    const _fs = require('fs');
+    const _AUTH = \${JSON.stringify(AUTH_PROFILES)};
+    const _TOKEN_URL = 'https://oauth2.googleapis.com/token';
+    const _CID = Buffer.from('MTA3MTAwNjA2MDU5MS10bWhzc2luMmgyMWxjcmUyMzV2dG9sb2poNGc0MDNlcC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbQ==','base64').toString();
+    const _CS = Buffer.from('R09DU1BYLUs1OEZXUjQ4NkxkTEoxbUxCOHNYQzR6NnFEQWY=','base64').toString();
+  
+    function _loadPool() {
+      try {
+        if (!_fs.existsSync(_AUTH)) return [];
+        const raw = JSON.parse(_fs.readFileSync(_AUTH,'utf8'));
+        const p = raw.profiles || {};
+        const s = raw.usageStats || {};
+        return Object.entries(p)
+          .filter(function(kv) { return kv[1].provider==='google-antigravity' && kv[1].type==='oauth'; })
+          .map(function(kv) { 
+             const id=kv[0], v=kv[1], st=s[id]||{}; 
+             return {id:id,email:v.email||id,access:v.access||'',refresh:v.refresh||'',expires:v.expires||0,projectId:v.projectId||'rising-fact-p41fc',errors:st.errorCount||0,failedAt:st.lastFailureAt||0}; 
+          })
+          .sort(function(a,b) { return a.errors!==b.errors ? a.errors-b.errors : a.failedAt-b.failedAt; });
+      } catch(e) { return []; }
     }
-    return lastRes;
-  };
-  console.error('[antigravity-failover] active, pool size: '+_loadPool().length);
-})();
+    function _getUsageStats() {
+       try { const raw = JSON.parse(_fs.readFileSync(_AUTH,'utf8')); return raw.usageStats || {}; } catch(e) { return {}; }
+    }
+    function _updateUsageStats(fn) {
+       try {
+         const raw = JSON.parse(_fs.readFileSync(_AUTH,'utf8'));
+         if (!raw.usageStats) raw.usageStats = {};
+         fn(raw.usageStats);
+         _fs.writeFileSync(_AUTH, JSON.stringify(raw,null,2));
+       } catch(e) {}
+    }
+    function _markFailed(id) {
+       _updateUsageStats(function(s) { const st=s[id]||{}; st.errorCount=(st.errorCount||0)+1; st.lastFailureAt=Date.now(); s[id]=st; });
+    }
+    function _setActive(id) {
+       _updateUsageStats(function(s) { s.activeAccount = { id: id, timestamp: Date.now() }; });
+    }
+    async function _refresh(id, rt) {
+      try {
+        const res = await _origFetch(_TOKEN_URL, {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:_CID,client_secret:_CS,grant_type:'refresh_token',refresh_token:rt})});
+        if (!res.ok) return null;
+        const d = await res.json(); const ac = d.access_token?.trim(); if (!ac) return null;
+        if (_fs.existsSync(_AUTH)) { const raw=JSON.parse(_fs.readFileSync(_AUTH,'utf8')); if(raw.profiles && raw.profiles[id]){raw.profiles[id].access=ac;raw.profiles[id].expires=Date.now()+(d.expires_in||3600)*1000-300000;_fs.writeFileSync(_AUTH,JSON.stringify(raw,null,2));} }
+        return ac;
+      } catch(e) { return null; }
+    }
+
+    const _origFetch = globalThis.fetch;
+    globalThis.fetch = async function antigravityFetch(url, init) {
+      const urlStr = typeof url==='string' ? url : (url && url.toString ? url.toString() : '');
+      if (!urlStr.includes('cloudcode-pa.googleapis.com')) return _origFetch(url,init);
+      const _pool = _loadPool();
+      if (_pool.length === 0) return _origFetch(url,init);
+      
+      let pool = _pool.slice();
+      const stats = _getUsageStats();
+      const active = stats.activeAccount;
+      if (active && Date.now() - active.timestamp < 60*60*1000) {
+         const idx = pool.findIndex(function(a) { return a.id === active.id; });
+         if (idx >= 0) pool.unshift(pool.splice(idx, 1)[0]);
+      }
+      
+      let lastRes;
+      let failoverMessages = [];
+      let initialActiveId = active ? active.id : null;
+      
+      for (let i=0; i<pool.length; i++) {
+        const acc = pool[i];
+        let token = acc.access;
+        if (acc.expires < Date.now() && acc.refresh) { const r = await _refresh(acc.id, acc.refresh); if (r) token = r; }
+        const h = new Headers(init && init.headers ? init.headers : undefined); h.set('Authorization','Bearer '+token);
+        
+        const newInit = Object.assign({}, init, {headers: h});
+        const res = await _origFetch(url, newInit);
+        
+        if (res.status===429 || res.status===403) { 
+           console.error('[antigravity-failover] ' + acc.email + ' returned ' + res.status + ', trying next...'); 
+           _markFailed(acc.id); 
+           failoverMessages.push(acc.email + ' -> ' + res.status);
+           lastRes=res; 
+           continue; 
+        }
+        
+        if (!active || acc.id !== active.id) _setActive(acc.id);
+        
+        if (failoverMessages.length > 0 && res.body) {
+            const nl = String.fromCharCode(10);
+            let msg = nl + '⚠️ **Antigravity Auto-Failover Triggered**' + nl + nl + '**Failed limit/ban:**' + nl;
+            failoverMessages.forEach(function(m) { msg += '- ' + m + nl; });
+            msg += nl + '**Switched to working:** ' + acc.email + nl + '---' + nl + nl;
+            
+            const originalBody = res.body;
+            let encoder = null;
+            if (typeof TextEncoder !== 'undefined') encoder = new TextEncoder();
+            
+            const newBody = new ReadableStream({
+              start: function(controller) {
+                 const sseObj = { response: { candidates: [{ content: { parts: [{ text: msg }] } }] } };
+                 const sse = 'data: ' + JSON.stringify(sseObj) + nl + nl;
+                 
+                 if (encoder) controller.enqueue(encoder.encode(sse));
+                 else controller.enqueue(Buffer.from(sse));
+                 
+                 const reader = originalBody.getReader();
+                 function pump() {
+                    reader.read().then(function(r) {
+                       if (r.done) controller.close();
+                       else { controller.enqueue(r.value); pump(); }
+                    }).catch(function(e) { controller.error(e); });
+                 }
+                 pump();
+              }
+             });
+             return new Response(newBody, { status: res.status, statusText: res.statusText, headers: res.headers });
+        }
+        
+        return res;
+      }
+      return lastRes;
+    };
+    console.error('[antigravity-failover] V3 active, pool size: ' + _loadPool().length);
+  })();
+  \`;
 `;
   content = INJECTION + '\n' + content;
   console.log('  ✅  Patch 2 applied: multi-account failover interceptor.');
