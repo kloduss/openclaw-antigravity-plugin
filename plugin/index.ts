@@ -503,7 +503,56 @@ const antigravityPlugin = {
       label: "Google Antigravity",
       docsPath: "/providers/models",
       aliases: ["antigravity"],
-
+      models: [
+        {
+          id: "gemini-3.1-pro-high",
+          label: "Gemini 3.1 Pro (High)",
+          maxContextTokens: 1048576,
+          maxOutputTokens: 8192,
+          isThinking: false,
+          capabilities: ["chat", "tools", "vision"]
+        },
+        {
+          id: "gemini-3.1-pro-low",
+          label: "Gemini 3.1 Pro (Low)",
+          maxContextTokens: 1048576,
+          maxOutputTokens: 8192,
+          isThinking: false,
+          capabilities: ["chat", "tools", "vision"]
+        },
+        {
+          id: "gemini-3-flash",
+          label: "Gemini 3 Flash",
+          maxContextTokens: 1048576,
+          maxOutputTokens: 8192,
+          isThinking: false,
+          capabilities: ["chat", "tools", "vision"]
+        },
+        {
+          id: "claude-sonnet-4-6-thinking",
+          label: "Claude Sonnet 4.6 (Thinking)",
+          maxContextTokens: 200000,
+          maxOutputTokens: 8192,
+          isThinking: true,
+          capabilities: ["chat", "tools", "vision"]
+        },
+        {
+          id: "claude-opus-4-6-thinking",
+          label: "Claude Opus 4.6 (Thinking)",
+          maxContextTokens: 200000,
+          maxOutputTokens: 8192,
+          isThinking: true,
+          capabilities: ["chat", "tools", "vision"]
+        },
+        {
+          id: "gpt-oss-120b-medium",
+          label: "GPT-OSS 120B (Medium)",
+          maxContextTokens: 128000,
+          maxOutputTokens: 8192,
+          isThinking: false,
+          capabilities: ["chat", "tools"]
+        }
+      ],
 
       // ── Critical: package { token, projectId } so the provider can parse it ─
       formatApiKey: (cred) => {
